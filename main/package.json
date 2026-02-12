@@ -6,23 +6,28 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "migrate": "node routes/init_db.js"
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "db:generate": "prisma generate",
+    "db:seed": "node prisma/seed.js"
   },
   "dependencies": {
-    "bcrypt": "^5.1.1",
-    "bcryptjs": "^3.0.3",
-    "cloudinary": "^1.41.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
+    "cors": "^2.8.5",
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.3.1",
+    "cloudinary": "^1.41.0",
     "multer": "^1.4.5-lts.1",
     "path": "^0.12.7",
+    "@prisma/client": "^5.6.0",
+    "@prisma/adapter-libsql": "^5.6.0",
     "pg": "^8.11.3",
     "sqlite3": "^5.1.6"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "prisma": "^5.6.0"
   },
   "engines": {
     "node": ">=18.0.0"

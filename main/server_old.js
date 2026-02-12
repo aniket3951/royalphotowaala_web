@@ -54,6 +54,31 @@ cloudinary.config({
 // --------------------
 // Database is handled by Prisma client
 
+// Create default admin user (for demo purposes)
+async function createDefaultAdmin() {
+  try {
+    const existingAdmin = await prisma.user.findFirst({
+      where: { username: 'admin' }
+    });
+    
+    if (!existingAdmin) {
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      await prisma.user.create({
+        data: {
+          username: 'admin',
+          password_hash: hashedPassword
+        }
+      });
+      console.log("✅ Default admin created (admin/admin123)");
+    }
+  } catch (error) {
+    console.log("⚠️ Admin creation skipped (user table may not exist)");
+  }
+}
+
+// Initialize database
+createDefaultAdmin();
+
 // --------------------
 // HELPERS
 // --------------------
@@ -65,55 +90,77 @@ function normalizePhone(number, country = "91") {
   return null;
 }
 
-// --------------------
-// AUTH MIDDLEWARE
-// --------------------
-const loginRequired = (req, res, next) => {
+function buildWhatsAppLink(number, message) {
+  const encoded = encodeURIComponent(message);
+  return `https://wa.me/${number}?text=${encoded}`;
+}
+
+function loginRequired(req, res, next) {
   if (!req.session.logged_in) {
-    return res.status(401).send(`
-      <script>
-        alert("Please login first");
-        window.location.href = "/admin_login";
-      </script>
-    `);
+    return res.redirect("/admin_login");
   }
   next();
-};
+}
 
 // --------------------
 // ROUTES
 // --------------------
+// Home page - serve the HTML file
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../templates/index.html"));
 });
 
+// Admin login page
 app.get("/admin_login", (req, res) => {
   res.sendFile(path.join(__dirname, "../templates/admin_login.html"));
 });
 
-app.post("/admin_login", async (req, res) => {
+// Admin login POST
+app.post("/admin_login", (req, res) => {
   const { username, password } = req.body;
-  
-  if (!username || !password) {
-    return res.status(400).send("Username and password required");
-  }
 
-  // Simple admin check (replace with proper auth in production)
-  if (username === "admin" && password === "admin123") {
+  db.get("SELECT * FROM admin_users WHERE username=?", [username], async (err, user) => {
+    if (!user) {
+      return res.send(`
+        <script>
+          alert("Invalid credentials");
+          window.location.href = "/admin_login";
+        </script>
+      `);
+    }
+
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) {
+      return res.send(`
+        <script>
+          alert("Invalid credentials");
+          window.location.href = "/admin_login";
+        </script>
+      `);
+    }
+
     req.session.logged_in = true;
     res.redirect("/dashboard");
-  } else {
-    res.send(`
-      <script>
-        alert("Invalid credentials");
-        window.location.href = "/admin_login";
-      </script>
-    `);
-  }
+  });
 });
 
+// Dashboard page
 app.get("/dashboard", loginRequired, (req, res) => {
   res.sendFile(path.join(__dirname, "../templates/dashboard_new (1).html"));
+});
+
+// Dashboard API
+app.get("/api/bookings", async (req, res) => {
+  try {
+    const bookings = await prisma.booking.findMany({
+      orderBy: { created_at: 'desc' },
+      take: 100
+    });
+    res.json({ bookings });
+  } catch (error) {
+    console.error("Database error:", error);
+    res.status(500).json({ error: "Database error" });
+  }
 });
 
 app.get("/logout", (req, res) => {
@@ -157,19 +204,18 @@ app.post("/api/upload", upload.single("image"), async (req, res) => {
     const imageUrl = `/static/uploads/${req.file.filename}`;
     const publicId = req.file.filename;
     
-    const newImage = await prisma.gallery.create({
-      data: {
-        image_url: imageUrl,
-        public_id: publicId,
-        caption: ""
+    db.run(
+      "INSERT INTO gallery (image_url, public_id) VALUES (?, ?)",
+      [imageUrl, publicId],
+      function(err) {
+        if (err) return res.status(500).json({ ok: false, error: "Database error" });
+        
+        console.log(`✅ Image uploaded locally: ${publicId}`);
+        res.json({ ok: true, url: imageUrl, public_id: publicId });
       }
-    });
-    
-    console.log(`✅ Image uploaded locally: ${publicId}`);
-    res.json({ ok: true, url: imageUrl, public_id: publicId });
-    
-  } catch (error) {
-    console.error("❌ Upload error:", error);
+    );
+  } catch (err) {
+    console.error("❌ Upload error:", err);
     res.status(500).json({ ok: false, error: "Upload failed" });
   }
 });
@@ -254,7 +300,8 @@ app.get("/api/site-assets", async (req, res) => {
 });
 
 app.post("/api/site-assets", upload.single("image"), async (req, res) => {
-  if (!req.file) return res.status(400).json({ ok: false, error: "No image" });  
+  if (!req.file) return res.status(400).json({ ok: false, error: "No image" });
+  
   const { asset_type, alt_text } = req.body;
   if (!asset_type) return res.status(400).json({ ok: false, error: "Asset type required" });
 
@@ -263,7 +310,7 @@ app.post("/api/site-assets", upload.single("image"), async (req, res) => {
     const imageUrl = `/static/uploads/${req.file.filename}`;
     const publicId = req.file.filename;
 
-    const updatedAsset = await prisma.siteAsset.upsert({
+    await prisma.siteAsset.upsert({
       where: { asset_type },
       update: {
         image_url: imageUrl,
@@ -311,7 +358,8 @@ app.get("/api/home-images", async (req, res) => {
 });
 
 app.post("/api/home-images", upload.single("image"), async (req, res) => {
-  if (!req.file) return res.status(400).json({ ok: false, error: "No image" });  
+  if (!req.file) return res.status(400).json({ ok: false, error: "No image" });
+  
   const { caption, display_order } = req.body;
 
   try {
@@ -319,7 +367,7 @@ app.post("/api/home-images", upload.single("image"), async (req, res) => {
     const imageUrl = `/static/uploads/${req.file.filename}`;
     const publicId = req.file.filename;
 
-    const newImage = await prisma.homeImage.create({
+    await prisma.homeImage.create({
       data: {
         image_url: imageUrl,
         public_id: publicId,
@@ -329,7 +377,7 @@ app.post("/api/home-images", upload.single("image"), async (req, res) => {
     });
     
     console.log(`✅ Home image added: ${publicId}`);
-    res.json({ ok: true, url: imageUrl, public_id: publicId, id: newImage.id });
+    res.json({ ok: true, url: imageUrl, public_id: publicId, id: this.lastID });
     
   } catch (error) {
     console.error("❌ Home image upload error:", error);
@@ -353,31 +401,12 @@ app.delete("/api/home-images/:id", async (req, res) => {
   }
 });
 
-// Dashboard API
-app.get("/api/bookings", async (req, res) => {
-  try {
-    const bookings = await prisma.booking.findMany({
-      orderBy: { created_at: 'desc' },
-      take: 100
-    });
-    res.json({ bookings });
-  } catch (error) {
-    console.error("Database error:", error);
-    res.status(500).json({ error: "Database error" });
-  }
-});
-
-app.get("/logout", (req, res) => {
-  req.session.destroy();
-  res.redirect("/admin_login");
-});
-
 // Health API
 app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
     whatsapp: process.env.ADMIN_WHATSAPP_NUMBER || "918149003738",
-    database: "dev.db",
+    database: "./database/booking.db",
     db_ready: true,
     uploads_dir: path.join(__dirname, "static", "uploads"),
     uploads_exist: fs.existsSync(path.join(__dirname, "static", "uploads"))
@@ -385,20 +414,17 @@ app.get("/api/health", (req, res) => {
 });
 
 // Test bookings endpoint
-app.get("/api/test-bookings", async (req, res) => {
-  try {
-    const bookings = await prisma.booking.findMany({
-      orderBy: { created_at: 'desc' },
-      take: 5
-    });
+app.get("/api/test-bookings", (req, res) => {
+  db.all("SELECT * FROM bookings ORDER BY created_at DESC LIMIT 5", [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: "Database error" });
+    }
     res.json({ 
       message: "Bookings API working",
-      count: bookings.length,
-      bookings: bookings 
+      count: rows.length,
+      bookings: rows 
     });
-  } catch (error) {
-    res.status(500).json({ error: "Database error" });
-  }
+  });
 });
 
 // --------------------
@@ -454,9 +480,21 @@ app.post("/api/book", async (req, res) => {
 // --------------------
 // START SERVER
 // --------------------
-app.listen(PORT, () => {
-  console.log(`🚀 Royal Photowaala server running on port ${PORT}`);
-  console.log(`📱 WhatsApp: ${process.env.ADMIN_WHATSAPP_NUMBER || "918149003738"}`);
-  console.log(`🌐 Visit: http://localhost:${PORT}`);
-  console.log(`🗄️ Using Prisma database`);
-});
+async function startServer() {
+  try {
+    // Initialize database
+    await createDefaultAdmin();
+    
+    app.listen(PORT, () => {
+      console.log(`🚀 Royal Photowaala server running on port ${PORT}`);
+      console.log(`📱 WhatsApp: ${process.env.ADMIN_WHATSAPP_NUMBER || "918149003738"}`);
+      console.log(`🌐 Visit: http://localhost:${PORT}`);
+      console.log(`🗄️ Using Prisma database`);
+    });
+  } catch (error) {
+    console.error("❌ Failed to start server:", error);
+    process.exit(1);
+  }
+}
+
+startServer();

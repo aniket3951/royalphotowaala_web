@@ -5,10 +5,7 @@ const path = require("path");
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
-const fetch = require("node-fetch");
-const cors = require("cors");
-const FormData = require("form-data");  // ✅ ADDED: For proper Node FormData
-const { Blob } = require("node:buffer");  // ✅ ADDED: For File/Blob support
+const http = require("http");
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -22,39 +19,16 @@ cloudinary.config({
 
 // 🔐 SECRET KEY
 const SECRET_KEY = process.env.SECRET_KEY || "royalphotowaala-secret-2025";
-
-// 🔐 ADMIN CREDENTIALS
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 
 // --------------------
 // CONFIG
 // --------------------
-// ✅ FIXED: Session middleware should come before body parser
-app.use(
-  session({
-    secret: SECRET_KEY,
-    resave: false,
-    saveUninitialized: false,
-    cookie: { 
-      maxAge: 24 * 60 * 60 * 1000,  // 24 hours
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true 
-    }
-  })
-);
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// ✅ FIXED CORS - Added production domains + credentials
-app.use(cors({
-  origin: [
-    "http://localhost:5000", 
-    "http://localhost:5001",
-    "https://royalphotowaala.onrender.com",
-    "https://royalphotowaalaadmin.onrender.com"
-  ],
+app.use(require("cors")({
+  origin: ["http://localhost:5000", "http://localhost:5001"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Accept"],
   credentials: true,
@@ -68,6 +42,14 @@ app.options('*', cors());
 app.use("/styles", express.static(path.join(__dirname, "styles")));
 app.use("/scripts", express.static(path.join(__dirname, "scripts")));
 app.use(express.static(path.join(__dirname, "templates")));
+
+app.use(
+  session({
+    secret: SECRET_KEY,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
 // --------------------
 // HELPERS
@@ -84,19 +66,40 @@ const loginRequired = (req, res, next) => {
   next();
 };
 
+// Helper function to make HTTP requests
+function makeRequest(url, options = {}) {
+  return new Promise((resolve, reject) => {
+    const req = http.request(url, options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      res.on('end', () => {
+        try {
+          const jsonData = JSON.parse(data);
+          resolve(jsonData);
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+    
+    req.on('error', (err) => {
+      reject(err);
+    });
+    
+    if (options.body) {
+      req.write(options.body);
+    }
+    
+    req.end();
+  });
+}
+
 // --------------------
 // ROUTES
 // --------------------
 app.get("/", (req, res) => {
-  console.log('🔍 Dashboard access - Session:', req.session);
-  
-  // Check if user is logged in, if not redirect to login
-  if (!req.session.logged_in) {
-    console.log('❌ Not logged in, redirecting to login');
-    return res.redirect("/admin_login");
-  }
-  
-  console.log('✅ Logged in, serving dashboard');
   res.sendFile(path.join(__dirname, "templates/dashboard.html"));
 });
 
@@ -107,18 +110,14 @@ app.get("/admin_login", (req, res) => {
 app.post("/admin_login", (req, res) => {
   const { username, password } = req.body;
   
-  console.log('🔍 Login attempt:', { username, password });
-  
   if (!username || !password) {
     return res.status(400).send("Username and password required");
   }
 
   if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
     req.session.logged_in = true;
-    console.log('✅ Login successful, redirecting to dashboard');
     res.redirect("/");
   } else {
-    console.log('❌ Login failed');
     res.send(`
       <script>
         alert("Invalid credentials");
@@ -129,17 +128,14 @@ app.post("/admin_login", (req, res) => {
 });
 
 app.get("/logout", (req, res) => {
-  req.session.destroy((err) => {
-    if (err) console.error('Session destroy error:', err);
-    res.redirect("/admin_login");
-  });
+  req.session.destroy();
+  res.redirect("/admin_login");
 });
 
-// ✅ DATA PROXY ENDPOINTS (GET - Working fine)
+// Dashboard API endpoints (proxy to main website)
 app.get("/api/bookings", async (req, res) => {
   try {
-    const response = await fetch('http://localhost:5000/api/bookings');
-    const data = await response.json();
+    const data = await makeRequest('http://localhost:5000/api/bookings');
     res.json(data);
   } catch (error) {
     console.error('Error fetching bookings:', error);
@@ -149,8 +145,7 @@ app.get("/api/bookings", async (req, res) => {
 
 app.get("/api/gallery", async (req, res) => {
   try {
-    const response = await fetch('http://localhost:5000/api/gallery');
-    const data = await response.json();
+    const data = await makeRequest('http://localhost:5000/api/gallery');
     res.json(data);
   } catch (error) {
     console.error('Error fetching gallery:', error);
@@ -160,8 +155,7 @@ app.get("/api/gallery", async (req, res) => {
 
 app.get("/api/site-assets", async (req, res) => {
   try {
-    const response = await fetch('http://localhost:5000/api/site-assets');
-    const data = await response.json();
+    const data = await makeRequest('http://localhost:5000/api/site-assets');
     res.json(data);
   } catch (error) {
     console.error('Error fetching site assets:', error);
@@ -171,8 +165,7 @@ app.get("/api/site-assets", async (req, res) => {
 
 app.get("/api/home-images", async (req, res) => {
   try {
-    const response = await fetch('http://localhost:5000/api/home-images');
-    const data = await response.json();
+    const data = await makeRequest('http://localhost:5000/api/home-images');
     res.json(data);
   } catch (error) {
     console.error('Error fetching home images:', error);
@@ -180,25 +173,22 @@ app.get("/api/home-images", async (req, res) => {
   }
 });
 
-// ✅ FIXED UPLOAD ENDPOINTS - Proper FormData + Blob
+// Image upload endpoints (proxy to main website)
 app.post("/api/upload", multer({ storage: multer.memoryStorage() }).single("image"), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ ok: false, error: "No file uploaded" });
-    }
-
-    const formData = new FormData();
-    // ✅ FIXED: Create proper Blob/File for node-fetch
-    const fileBlob = new Blob([req.file.buffer], { type: req.file.mimetype }, req.file.originalname);
-    formData.append('image', fileBlob, req.file.originalname);
+    const boundary = '----formdata-node-' + Math.random().toString(16).substr(2, 16);
+    let formData = `--${boundary}\r\nContent-Disposition: form-data; name="image"; filename="${req.file.originalname}"\r\nContent-Type: ${req.file.mimetype}\r\n\r\n${req.file.buffer.toString('base64')}\r\n--${boundary}--`;
     
-    const response = await fetch('http://localhost:5000/api/upload', {
+    const options = {
       method: 'POST',
-      body: formData
-    });
+      headers: {
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        'Content-Length': Buffer.byteLength(formData)
+      }
+    };
     
-    const result = await response.json();
-    res.json(result);
+    const data = await makeRequest('http://localhost:5000/api/upload', options);
+    res.json(data);
   } catch (error) {
     console.error('Error uploading image:', error);
     res.status(500).json({ ok: false, error: "Upload failed" });
@@ -207,23 +197,19 @@ app.post("/api/upload", multer({ storage: multer.memoryStorage() }).single("imag
 
 app.post("/api/site-assets", multer({ storage: multer.memoryStorage() }).single("image"), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ ok: false, error: "No file uploaded" });
-    }
-
-    const formData = new FormData();
-    const fileBlob = new Blob([req.file.buffer], { type: req.file.mimetype }, req.file.originalname);
-    formData.append('image', fileBlob, req.file.originalname);
-    formData.append('asset_type', req.body.asset_type || '');
-    formData.append('alt_text', req.body.alt_text || '');
+    const boundary = '----formdata-node-' + Math.random().toString(16).substr(2, 16);
+    let formData = `--${boundary}\r\nContent-Disposition: form-data; name="image"; filename="${req.file.originalname}"\r\nContent-Type: ${req.file.mimetype}\r\n\r\n${req.file.buffer.toString('base64')}\r\n--${boundary}\r\nContent-Disposition: form-data; name="asset_type"\r\n\r\n${req.body.asset_type}\r\n--${boundary}\r\nContent-Disposition: form-data; name="alt_text"\r\n\r\n${req.body.alt_text || ''}\r\n--${boundary}--`;
     
-    const response = await fetch('http://localhost:5000/api/site-assets', {
+    const options = {
       method: 'POST',
-      body: formData
-    });
+      headers: {
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        'Content-Length': Buffer.byteLength(formData)
+      }
+    };
     
-    const result = await response.json();
-    res.json(result);
+    const data = await makeRequest('http://localhost:5000/api/site-assets', options);
+    res.json(data);
   } catch (error) {
     console.error('Error uploading site asset:', error);
     res.status(500).json({ ok: false, error: "Upload failed" });
@@ -232,38 +218,32 @@ app.post("/api/site-assets", multer({ storage: multer.memoryStorage() }).single(
 
 app.post("/api/home-images", multer({ storage: multer.memoryStorage() }).single("image"), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ ok: false, error: "No file uploaded" });
-    }
-
-    const formData = new FormData();
-    const fileBlob = new Blob([req.file.buffer], { type: req.file.mimetype }, req.file.originalname);
-    formData.append('image', fileBlob, req.file.originalname);
-    formData.append('caption', req.body.caption || '');
-    formData.append('display_order', req.body.display_order || '0');
+    const boundary = '----formdata-node-' + Math.random().toString(16).substr(2, 16);
+    let formData = `--${boundary}\r\nContent-Disposition: form-data; name="image"; filename="${req.file.originalname}"\r\nContent-Type: ${req.file.mimetype}\r\n\r\n${req.file.buffer.toString('base64')}\r\n--${boundary}\r\nContent-Disposition: form-data; name="caption"\r\n\r\n${req.body.caption || ''}\r\n--${boundary}\r\nContent-Disposition: form-data; name="display_order"\r\n\r\n${req.body.display_order || '0'}\r\n--${boundary}--`;
     
-    const response = await fetch('http://localhost:5000/api/home-images', {
+    const options = {
       method: 'POST',
-      body: formData
-    });
+      headers: {
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        'Content-Length': Buffer.byteLength(formData)
+      }
+    };
     
-    const result = await response.json();
-    res.json(result);
+    const data = await makeRequest('http://localhost:5000/api/home-images', options);
+    res.json(data);
   } catch (error) {
     console.error('Error uploading home image:', error);
     res.status(500).json({ ok: false, error: "Upload failed" });
   }
 });
 
-// ✅ DELETE ENDPOINTS (Working fine)
+// Delete endpoints (proxy to main website)
 app.delete("/api/gallery/:public_id", async (req, res) => {
   try {
-    const response = await fetch(`http://localhost:5000/api/gallery/${req.params.public_id}`, {
+    const data = await makeRequest(`http://localhost:5000/api/gallery/${req.params.public_id}`, {
       method: 'DELETE'
     });
-    
-    const result = await response.json();
-    res.json(result);
+    res.json(data);
   } catch (error) {
     console.error('Error deleting gallery image:', error);
     res.status(500).json({ ok: false, error: "Delete failed" });
@@ -272,12 +252,10 @@ app.delete("/api/gallery/:public_id", async (req, res) => {
 
 app.delete("/api/home-images/:id", async (req, res) => {
   try {
-    const response = await fetch(`http://localhost:5000/api/home-images/${req.params.id}`, {
+    const data = await makeRequest(`http://localhost:5000/api/home-images/${req.params.id}`, {
       method: 'DELETE'
     });
-    
-    const result = await response.json();
-    res.json(result);
+    res.json(data);
   } catch (error) {
     console.error('Error deleting home image:', error);
     res.status(500).json({ ok: false, error: "Delete failed" });
@@ -291,5 +269,4 @@ app.listen(PORT, () => {
   console.log(`🚀 Dashboard server running on port ${PORT}`);
   console.log(`🌐 Dashboard: http://localhost:${PORT}`);
   console.log(`🔗 Connected to main website: http://localhost:5000`);
-  console.log(`✅ Admin login: admin/admin123`);
 });

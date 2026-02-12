@@ -267,23 +267,48 @@
           backgroundContainer.className = "dynamic-background";
           
           images.forEach((img, index) => {
-            const bgDiv = document.createElement("div");
-            bgDiv.className = `background-slide ${index === 0 ? 'active' : ''}`;
-            bgDiv.style.backgroundImage = `url(${img.url})`;
-            bgDiv.setAttribute('data-caption', img.caption);
-            backgroundContainer.appendChild(bgDiv);
+            const imgElement = document.createElement("img");
+            imgElement.src = img.url;
+            imgElement.alt = img.caption || `Home image ${index + 1}`;
+            imgElement.className = "background-slide";
+            imgElement.style.cssText = `
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              opacity: 0;
+              transition: opacity 1s ease-in-out;
+            `;
+            
+            backgroundContainer.appendChild(imgElement);
           });
           
-          homeSection.insertBefore(backgroundContainer, homeSection.firstChild);
+          homeSection.appendChild(backgroundContainer);
           
-          // Auto-rotate background images
+          // Start slideshow
           let currentSlide = 0;
+          const slides = backgroundContainer.querySelectorAll(".background-slide");
+          
+          function showSlide(index) {
+            slides.forEach((slide, i) => {
+              slide.style.opacity = i === index ? "1" : "0";
+            });
+          }
+          
+          // Show first slide immediately
+          showSlide(0);
+          
+          // Auto-advance slides every 5 seconds
           setInterval(() => {
-            const slides = backgroundContainer.querySelectorAll('.background-slide');
-            slides[currentSlide].classList.remove('active');
-            currentSlide = (currentSlide + 1) % slides.length;
-            slides[currentSlide].classList.add('active');
+            currentSlide = (currentSlide + 1) % images.length;
+            showSlide(currentSlide);
           }, 5000);
+          
+          console.log(` Loaded ${images.length} home images for slideshow`);
+        } else {
+          console.log("No home images available");
         }
       })
       .catch(err => console.log("Home images error", err));
