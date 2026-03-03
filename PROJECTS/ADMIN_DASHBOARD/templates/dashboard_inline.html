@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - Royal Photowaala</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    
+    <!-- Inline CSS to ensure it loads -->
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --dark: #1f2937;
+            --light: #f3f4f6;
+            --white: #ffffff;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --radius: 8px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 2rem 0;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .brand {
+            color: var(--white);
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 0 1rem;
+        }
+
+        .sidebar nav ul {
+            list-style: none;
+        }
+
+        .sidebar nav ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar nav ul li a {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            transition: var(--transition);
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar nav ul li a:hover,
+        .sidebar nav ul li a.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--white);
+            border-left-color: var(--secondary);
+        }
+
+        .sidebar nav ul li hr {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            margin: 1rem 0;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .dashboard-header {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dashboard-header h1 {
+            color: var(--dark);
+            font-size: 2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .toggle-mode {
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .toggle-mode:hover {
+            background: var(--primary-dark);
+        }
+
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--light);
+            border-radius: 50%;
+        }
+
+        .stat-info h3 {
+            font-size: 1.5rem;
+            color: var(--dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-info p {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .content-section {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .section-header h2 {
+            color: var(--dark);
+            font-size: 1.5rem;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: var(--radius);
+            background: var(--white);
+        }
+
+        .btn-primary, .btn-secondary, .btn-warning {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: var(--dark);
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-secondary:hover {
+            background: var(--dark);
+            color: var(--white);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: var(--white);
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .bookings-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .bookings-table th,
+        .bookings-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .bookings-table th {
+            background: var(--light);
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .bookings-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .status-select {
+            padding: 0.25rem 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-view, .btn-delete {
+            padding: 0.25rem 0.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .btn-view {
+            background: var(--info);
+            color: var(--white);
+        }
+
+        .btn-delete {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .upload-form {
+            background: var(--light);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            margin-bottom: 2rem;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: var(--primary);
+            color: var(--white);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+            margin-right: 1rem;
+        }
+
+        .file-label:hover {
+            background: var(--primary-dark);
+        }
+
+        .file-label input[type="file"] {
+            display: none;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .image-item {
+            position: relative;
+            background: var(--light);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .image-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: var(--danger);
+            color: var(--white);
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-preview {
+            text-align: center;
+            padding: 2rem;
+            background: var(--light);
+            border-radius: var(--radius);
+        }
+
+        .logo-preview img {
+            max-width: 200px;
+            max-height: 150px;
+            object-fit: contain;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #6b7280;
+            padding: 2rem;
+        }
+
+        .loading-cell, .error-cell, .empty-cell {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            background: var(--dark);
+            color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        .toast.warning {
+            background: var(--warning);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1500;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: var(--radius);
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .booking-details p {
+            margin-bottom: 0.5rem;
+        }
+
+        .booking-details strong {
+            color: var(--dark);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .stats-section {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .filter-controls {
+                width: 100%;
+            }
+
+            .filter-controls select,
+            .filter-controls button {
+                flex: 1;
+            }
+        }
+
+        body.dark {
+            --light: #374151;
+            --white: #1f2937;
+            --dark: #f3f4f6;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        body.dark .sidebar {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        }
+
+        body.dark .main-content {
+            background: #111827;
+        }
+
+        body.dark .dashboard-header,
+        body.dark .content-section,
+        body.dark .stat-card,
+        body.dark .upload-form,
+        body.dark .logo-preview {
+            background: #1f2937;
+            color: var(--dark);
+        }
+
+        body.dark .bookings-table th {
+            background: #374151;
+        }
+
+        body.dark .bookings-table tr:hover {
+            background: #374151;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="sidebar">
+        <div class="brand">📸 Royal Photowaala</div>
+
+        <nav>
+            <ul>
+                <li><a href="#bookings" class="nav-link active" data-section="bookings">📅 Bookings</a></li>
+                <li><a href="#gallery" class="nav-link" data-section="gallery">🖼️ Gallery</a></li>
+                <li><a href="#logo" class="nav-link" data-section="logo">🎨 Logo</a></li>
+                <li><a href="#home-images" class="nav-link" data-section="home-images">🏠 Home Images</a></li>
+
+                <hr>
+
+                <li>
+                    <a href="http://localhost:5000" class="view-website-link" target="_blank">
+                        🌐 View Website
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/logout" class="logout-link">
+                        🚪 Logout
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- ================= MAIN CONTENT ================= -->
+    <main class="main-content">
+
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div>
+                <h1>Admin Dashboard</h1>
+                <p class="subtitle">Manage your photography business</p>
+            </div>
+            <div class="header-actions">
+                <button class="toggle-mode">🌙 Dark Mode</button>
+            </div>
+        </header>
+
+        <!-- ================= STATS ================= -->
+        <section class="stats-section">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-info">
+                    <h3 id="totalBookings">0</h3>
+                    <p>Total Bookings</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-info">
+                    <h3 id="pendingBookings">0</h3>
+                    <p>Pending</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <h3 id="confirmedBookings">0</h3>
+                    <p>Confirmed</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🖼️</div>
+                <div class="stat-info">
+                    <h3 id="totalImages">0</h3>
+                    <p>Gallery Images</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= BOOKINGS ================= -->
+        <section id="bookings" class="content-section active">
+            <div class="section-header">
+                <h2>📅 Booking Requests (Last 3 Months)</h2>
+
+                <div class="filter-controls">
+                    <select id="statusFilter" class="filter-select">
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="completed">Completed</option>
+                    </select>
+
+                    <button id="archiveBookings" class="btn-warning">
+                        📦 Archive Old
+                    </button>
+
+                    <button id="refreshBookings" class="btn-secondary">
+                        🔄 Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="bookings-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Package</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="bookingsTableBody">
+                        <tr>
+                            <td colspan="8" class="loading-cell">
+                                Loading bookings...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ================= GALLERY ================= -->
+        <section id="gallery" class="content-section">
+            <div class="section-header">
+                <h2>🖼️ Best Captures Gallery</h2>
+            </div>
+
+            <div class="upload-form">
+                <form id="addImageForm">
+                    <label class="file-label">
+                        📁 Choose Image
+                        <input type="file" id="imageFile" accept="image/*" required>
+                    </label>
+                    <button type="submit" class="btn-primary">Add to Gallery</button>
+                </form>
+            </div>
+
+            <div class="image-grid" id="galleryImages">
+                <p class="empty-state">No images yet</p>
+            </div>
+        </section>
+
+        <!-- ================= LOGO ================= -->
+        <section id="logo" class="content-section">
+            <div class="section-header">
+                <h2>🎨 Website Logo</h2>
+            </div>
+
+            <div class="upload-form">
+                <form id="addLogoForm">
+                    <label class="file-label">
+                        📁 Choose Logo
+                        <input type="file" id="logoFile" accept="image/*" required>
+                    </label>
+                    <button type="submit" class="btn-primary">Update Logo</button>
+                </form>
+            </div>
+
+            <div class="logo-preview">
+                <img id="logoPreview" style="display: none;" />
+                <p id="noLogo">No logo uploaded yet</p>
+            </div>
+        </section>
+
+        <!-- ================= HOME IMAGES ================= -->
+        <section id="home-images" class="content-section">
+            <div class="section-header">
+                <h2>🏠 Home Page Slideshow</h2>
+            </div>
+
+            <div class="upload-form">
+                <form id="addHomeForm">
+                    <label class="file-label">
+                        📁 Choose Image
+                        <input type="file" id="homeFile" accept="image/*" required>
+                    </label>
+                    <button type="submit" class="btn-primary">Add Home Image</button>
+                </form>
+            </div>
+
+            <div class="image-grid" id="homeImages">
+                <p class="empty-state">No home images yet</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Modal -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Booking Details</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Booking details will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Inline JavaScript to ensure it loads -->
+    <script>
+        // ==================== GLOBAL VARIABLES ====================
+        const API_BASE = '/api';
+        let currentSection = 'bookings';
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Dashboard initialized');
+            initNavigation();
+            initDarkMode();
+            loadBookings();
+            initEventListeners();
+        });
+
+        // ==================== NAVIGATION ====================
+        function initNavigation() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.content-section');
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetSection = link.dataset.section;
+                    
+                    // Update active states
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    
+                    sections.forEach(s => s.classList.remove('active'));
+                    document.getElementById(targetSection)?.classList.add('active');
+                    
+                    currentSection = targetSection;
+                });
+            });
+        }
+
+        // ==================== DARK MODE ====================
+        function initDarkMode() {
+            const darkBtn = document.querySelector('.toggle-mode');
+            
+            // Load saved theme
+            if (localStorage.getItem("theme") === "dark") {
+                document.body.classList.add("dark");
+                darkBtn.textContent = "🌞 Light Mode";
+            }
+            
+            darkBtn.addEventListener("click", () => {
+                document.body.classList.toggle("dark");
+                const isDark = document.body.classList.contains("dark");
+                darkBtn.textContent = isDark ? "🌞 Light Mode" : "🌙 Dark Mode";
+                localStorage.setItem("theme", isDark ? "dark" : "light");
+            });
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        function initEventListeners() {
+            // Form submissions
+            document.getElementById('addImageForm')?.addEventListener('submit', handleAddImage);
+            document.getElementById('addLogoForm')?.addEventListener('submit', handleAddLogo);
+            document.getElementById('addHomeForm')?.addEventListener('submit', handleAddHomeImage);
+            
+            // Buttons
+            document.getElementById('refreshBookings')?.addEventListener('click', loadBookings);
+            document.getElementById('archiveBookings')?.addEventListener('click', archiveOldBookings);
+            document.getElementById('statusFilter')?.addEventListener('change', filterBookings);
+            
+            // Modal
+            document.querySelector('.modal-close')?.addEventListener('click', closeModal);
+            
+            // Close modal on outside click
+            window.addEventListener('click', (e) => {
+                const modal = document.getElementById('bookingModal');
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+        }
+
+        // ==================== BOOKINGS MANAGEMENT ====================
+        async function loadBookings() {
+            const tbody = document.getElementById('bookingsTableBody');
+            tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">Loading bookings...</td></tr>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/bookings`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch bookings');
+                }
+                
+                const data = await response.json();
+                const bookings = data.bookings || data || [];
+                
+                // Update statistics
+                updateBookingStats(bookings);
+                
+                // Render bookings table
+                renderBookingsTable(bookings);
+                
+            } catch (error) {
+                console.error('Error loading bookings:', error);
+                tbody.innerHTML = '<tr><td colspan="8" class="error-cell">Failed to load bookings. Please refresh.</td></tr>';
+                showToast('Failed to load bookings', 'error');
+            }
+        }
+
+        function renderBookingsTable(bookings) {
+            const tbody = document.getElementById('bookingsTableBody');
+            
+            if (bookings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="empty-cell">No bookings found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = bookings.map(booking => `
+                <tr data-id="${booking.id}">
+                    <td>${booking.id}</td>
+                    <td>${escapeHtml(booking.name)}</td>
+                    <td><a href="mailto:${escapeHtml(booking.email)}">${escapeHtml(booking.email)}</a></td>
+                    <td><a href="tel:${escapeHtml(booking.phone)}">${escapeHtml(booking.phone)}</a></td>
+                    <td>${escapeHtml(booking.package)}</td>
+                    <td>${formatDate(booking.date)}</td>
+                    <td>
+                        <select class="status-select" onchange="updateBookingStatus(${booking.id}, this.value)">
+                            <option value="pending" ${booking.status === 'pending' ? 'selected' : ''}>⏳ Pending</option>
+                            <option value="confirmed" ${booking.status === 'confirmed' ? 'selected' : ''}>✅ Confirmed</option>
+                            <option value="cancelled" ${booking.status === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
+                            <option value="completed" ${booking.status === 'completed' ? 'selected' : ''}>🎉 Completed</option>
+                        </select>
+                    </td>
+                    <td class="action-buttons">
+                        <button class="btn-view" onclick="viewBookingDetails(${booking.id})" title="View Details">👁️</button>
+                        <button class="btn-delete" onclick="deleteBooking(${booking.id})" title="Delete">🗑️</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function updateBookingStatus(bookingId, newStatus) {
+            try {
+                const response = await fetch(`${API_BASE}/bookings/${bookingId}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                if (!response.ok) throw new Error('Failed to update status');
+                
+                showToast(`Booking status updated to ${newStatus}`, 'success');
+                loadBookings();
+                
+            } catch (error) {
+                console.error('Error updating status:', error);
+                showToast('Failed to update status', 'error');
+                loadBookings();
+            }
+        }
+
+        async function deleteBooking(bookingId) {
+            if (!confirm('Are you sure you want to delete this booking?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/bookings/${bookingId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) throw new Error('Failed to delete booking');
+                
+                showToast('Booking deleted successfully', 'success');
+                loadBookings();
+                
+            } catch (error) {
+                console.error('Error deleting booking:', error);
+                showToast('Failed to delete booking', 'error');
+            }
+        }
+
+        function viewBookingDetails(bookingId) {
+            const row = document.querySelector(`tr[data-id="${bookingId}"]`);
+            if (!row) return;
+            
+            const cells = row.querySelectorAll('td');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalBody.innerHTML = `
+                <div class="booking-details">
+                    <p><strong>Booking ID:</strong> ${cells[0].textContent}</p>
+                    <p><strong>Name:</strong> ${cells[1].textContent}</p>
+                    <p><strong>Email:</strong> ${cells[2].textContent}</p>
+                    <p><strong>Phone:</strong> ${cells[3].textContent}</p>
+                    <p><strong>Package:</strong> ${cells[4].textContent}</p>
+                    <p><strong>Event Date:</strong> ${cells[5].textContent}</p>
+                    <p><strong>Status:</strong> ${cells[6].querySelector('select').selectedOptions[0].textContent}</p>
+                </div>
+            `;
+            
+            document.getElementById('bookingModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('bookingModal').classList.remove('show');
+        }
+
+        function filterBookings() {
+            const filterValue = document.getElementById('statusFilter').value;
+            const rows = document.querySelectorAll('#bookingsTableBody tr');
+            
+            rows.forEach(row => {
+                if (filterValue === 'all') {
+                    row.style.display = '';
+                } else {
+                    const select = row.querySelector('.status-select');
+                    if (select && select.value === filterValue) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        function updateBookingStats(bookings) {
+            document.getElementById('totalBookings').textContent = bookings.length;
+            document.getElementById('pendingBookings').textContent = 
+                bookings.filter(b => b.status === 'pending').length;
+            document.getElementById('confirmedBookings').textContent = 
+                bookings.filter(b => b.status === 'confirmed').length;
+        }
+
+        async function archiveOldBookings() {
+            if (!confirm('This will archive all bookings older than 3 months to an Excel file. Continue?')) {
+                return;
+            }
+            
+            showToast('Archive feature coming soon!', 'info');
+        }
+
+        // ==================== GALLERY MANAGEMENT ====================
+        async function loadGallery() {
+            const container = document.getElementById('galleryImages');
+            container.innerHTML = '<p class="empty-state">Loading gallery...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/gallery`);
+                const gallery = await response.json();
+                
+                if (!gallery.length) {
+                    container.innerHTML = '<p class="empty-state">No gallery images uploaded</p>';
+                    return;
+                }
+                
+                container.innerHTML = '<div class="image-grid"></div>';
+                const grid = container.querySelector('.image-grid');
+                
+                gallery.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'image-item';
+                    div.innerHTML = `
+                        <img src="${item.image_url}" alt="${item.caption || 'Gallery Image'}">
+                        <button class="delete-btn" onclick="deleteGalleryImage('${item.public_id || item.id}')">🗑️</button>
+                    `;
+                    grid.appendChild(div);
+                });
+                
+            } catch (error) {
+                console.error("Error loading gallery:", error);
+                container.innerHTML = '<p class="empty-state">Error loading gallery</p>';
+            }
+        }
+
+        async function handleAddImage(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('imageFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showToast('Please select an image', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('images', file);
+            
+            try {
+                const response = await fetch(`${API_BASE}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showToast('Image uploaded successfully!', 'success');
+                    loadGallery();
+                    e.target.reset();
+                } else {
+                    showToast(`Upload failed: ${result.error || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                showToast(`Upload error: ${error.message}`, 'error');
+            }
+        }
+
+        async function deleteGalleryImage(id) {
+            if (!confirm("Delete this gallery image?")) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/gallery/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showToast("Gallery image deleted successfully", 'success');
+                    loadGallery();
+                } else {
+                    showToast("Failed to delete gallery image", 'error');
+                }
+            } catch (error) {
+                console.error("Delete error:", error);
+                showToast("Error deleting gallery image", 'error');
+            }
+        }
+
+        // ==================== LOGO MANAGEMENT ====================
+        async function loadLogo() {
+            const preview = document.getElementById("logoPreview");
+            const noLogo = document.getElementById("noLogo");
+            
+            try {
+                const response = await fetch(`${API_BASE}/site-assets`);
+                const assets = await response.json();
+                const logo = assets.find(asset => asset.asset_type === 'logo');
+                
+                if (logo) {
+                    preview.src = logo.image_url;
+                    preview.style.display = 'block';
+                    if (noLogo) noLogo.style.display = 'none';
+                } else {
+                    preview.style.display = 'none';
+                    if (noLogo) noLogo.style.display = 'block';
+                }
+                
+            } catch (error) {
+                console.error("Error loading logo:", error);
+                preview.style.display = 'none';
+                if (noLogo) noLogo.style.display = 'block';
+            }
+        }
+
+        async function handleAddLogo(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('logoFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showToast('Please select a logo', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('asset_type', 'logo');
+            formData.append('alt_text', 'Royal Photowaala Logo');
+            
+            try {
+                const response = await fetch(`${API_BASE}/site-assets`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showToast('Logo updated successfully', 'success');
+                    loadLogo();
+                    e.target.reset();
+                } else {
+                    showToast(`Upload failed: ${result.error || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                showToast(`Upload error: ${error.message}`, 'error');
+            }
+        }
+
+        // ==================== HOME IMAGES MANAGEMENT ====================
+        async function loadHomeImages() {
+            const container = document.getElementById('homeImages');
+            container.innerHTML = '<p class="empty-state">Loading home images...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/home-images`);
+                const homeImages = await response.json();
+                
+                if (!homeImages.length) {
+                    container.innerHTML = '<p class="empty-state">No home images uploaded</p>';
+                    return;
+                }
+                
+                container.innerHTML = '<div class="image-grid"></div>';
+                const grid = container.querySelector('.image-grid');
+                
+                homeImages.forEach((item, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'image-item';
+                    div.innerHTML = `
+                        <img src="${item.image_url}" alt="${item.caption || 'Home Image'}">
+                        <button class="delete-btn" onclick="deleteHomeImage('${item.id}')">🗑️</button>
+                    `;
+                    grid.appendChild(div);
+                });
+                
+            } catch (error) {
+                console.error("Error loading home images:", error);
+                container.innerHTML = '<p class="empty-state">Error loading home images</p>';
+            }
+        }
+
+        async function handleAddHomeImage(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('homeFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showToast('Please select an image', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('images', file);
+            
+            try {
+                const response = await fetch(`${API_BASE}/home-images`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showToast('Home image added successfully', 'success');
+                    loadHomeImages();
+                    e.target.reset();
+                } else {
+                    showToast(`Upload failed: ${result.error || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                showToast(`Upload error: ${error.message}`, 'error');
+            }
+        }
+
+        async function deleteHomeImage(id) {
+            if (!confirm("Delete this home image?")) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/home-images/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showToast("Home image deleted successfully", 'success');
+                    loadHomeImages();
+                } else {
+                    showToast("Failed to delete home image", 'error');
+                }
+            } catch (error) {
+                console.error("Delete error:", error);
+                showToast("Error deleting home image", 'error');
+            }
+        }
+
+        // ==================== UTILITY FUNCTIONS ====================
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-IN', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load gallery and home images when sections are activated
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('nav-link')) {
+                const section = e.target.dataset.section;
+                if (section === 'gallery') {
+                    setTimeout(loadGallery, 100);
+                } else if (section === 'home-images') {
+                    setTimeout(loadHomeImages, 100);
+                } else if (section === 'logo') {
+                    setTimeout(loadLogo, 100);
+                }
+            }
+        });
+
+        console.log('✅ Dashboard script loaded successfully!');
+    </script>
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login | Royal Photowaala</title>
+
+<!-- ===== STYLING ===== -->
+<style>
+  /* ===============================
+     Global Styles
+     =============================== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+  }
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #333;
+    overflow: hidden;
+  }
+
+  /* Background decoration */
+  body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,138.7C960,139,1056,117,1152,106.7C1248,96,1344,96,1392,96L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+    background-size: cover;
+    opacity: 0.3;
+  }
+
+  /* ===============================
+     Login Container Styling
+     =============================== */
+  .login-wrapper {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    padding: 20px;
+  }
+
+  .login-container {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    padding: 48px 40px;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  .login-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Logo/Brand Section */
+  .brand-section {
+    margin-bottom: 32px;
+  }
+
+  .brand-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 28px;
+    color: white;
+  }
+
+  .login-container h2 {
+    margin-bottom: 8px;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a1a1a;
+    letter-spacing: -0.5px;
+  }
+
+  .subtitle {
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  /* ===============================
+     Input Field Styling
+     =============================== */
+  .form-group {
+    margin-bottom: 24px;
+    text-align: left;
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+  }
+
+  .input-wrapper {
+    position: relative;
+  }
+
+  .input-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 18px;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 14px 16px 14px 44px;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    color: #1f2937;
+    font-size: 15px;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  .form-input:focus {
+    background: white;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  .form-input::placeholder {
+    color: #9ca3af;
+  }
+
+  /* ===============================
+     Login Button Styling
+     =============================== */
+  .login-button {
+    width: 100%;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.3);
+    margin-top: 8px;
+  }
+
+  .login-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  }
+
+  .login-button:active {
+    transform: translateY(0);
+  }
+
+  .login-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* ===============================
+     Error and Success Messages
+     =============================== */
+  .message {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 16px;
+    font-size: 14px;
+    display: none;
+    animation: slideIn 0.3s ease;
+  }
+
+  .message.error {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+  }
+
+  .message.success {
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ===============================
+     Footer Styling
+     =============================== */
+  .login-footer {
+    margin-top: 32px;
+    text-align: center;
+  }
+
+  .footer-text {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 13px;
+  }
+
+  .footer-link {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .footer-link:hover {
+    text-decoration: underline;
+  }
+
+  /* ===============================
+     Loading State
+     =============================== */
+  .loading {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ===============================
+     Responsive Styling
+     =============================== */
+  @media (max-width: 480px) {
+    .login-wrapper {
+      padding: 16px;
+    }
+    
+    .login-container {
+      padding: 32px 24px;
+    }
+    
+    .brand-icon {
+      width: 56px;
+      height: 56px;
+      font-size: 24px;
+    }
+    
+    .login-container h2 {
+      font-size: 22px;
+    }
+  }
+</style>
+</head>
+
+<body>
+  <!-- ===============================
+       LOGIN CONTAINER
+       =============================== -->
+  <div class="login-wrapper">
+    <div class="login-container">
+      <!-- Brand Section -->
+      <div class="brand-section">
+        <div class="brand-icon">📸</div>
+        <h2>Admin Login</h2>
+        <p class="subtitle">Royal Photowaala Management Portal</p>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" method="POST" action="/login">
+        <!-- Username Field -->
+        <div class="form-group">
+          <label class="form-label" for="username">Username</label>
+          <div class="input-wrapper">
+            <span class="input-icon">👤</span>
+            <input 
+              type="text" 
+              id="username" 
+              name="username" 
+              class="form-input"
+              placeholder="Enter your username"
+              required
+              autocomplete="username"
+            >
+          </div>
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔒</span>
+            <input 
+              type="password" 
+              id="password" 
+              name="password" 
+              class="form-input"
+              placeholder="Enter your password"
+              required
+              autocomplete="current-password"
+            >
+          </div>
+        </div>
+
+        <!-- Login Button -->
+        <button type="submit" class="login-button" id="loginBtn">
+          <span id="btnText">Sign In</span>
+        </button>
+
+        <!-- Error and Success Messages -->
+        <div class="message error" id="errorBox"></div>
+        <div class="message success" id="successBox"></div>
+      </form>
+    </div>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <p class="footer-text">
+        © 2025 Royal Photowaala | 
+        <a href="/" class="footer-link">View Website</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Handle login form submission
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(e.target);
+      const errorBox = document.getElementById('errorBox');
+      const successBox = document.getElementById('successBox');
+      const loginBtn = document.getElementById('loginBtn');
+      const btnText = document.getElementById('btnText');
+      
+      // Hide previous messages
+      errorBox.style.display = 'none';
+      successBox.style.display = 'none';
+      
+      // Show loading state
+      loginBtn.disabled = true;
+      btnText.innerHTML = '<span class="loading"></span> Signing in...';
+      
+      try {
+        const response = await fetch('/login', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          successBox.textContent = 'Login successful! Redirecting to dashboard...';
+          successBox.style.display = 'block';
+          
+          // Simulate brief success display before redirect
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1200);
+        } else {
+          errorBox.textContent = result.message || 'Invalid username or password';
+          errorBox.style.display = 'block';
+          
+          // Reset button state
+          loginBtn.disabled = false;
+          btnText.textContent = 'Sign In';
+        }
+      } catch (error) {
+        errorBox.textContent = 'Network error. Please check your connection and try again.';
+        errorBox.style.display = 'block';
+        
+        // Reset button state
+        loginBtn.disabled = false;
+        btnText.textContent = 'Sign In';
+      }
+    });
+
+    // Add input focus effects
+    document.querySelectorAll('.form-input').forEach(input => {
+      input.addEventListener('focus', function() {
+        this.parentElement.querySelector('.input-icon').style.color = '#667eea';
+      });
+      
+      input.addEventListener('blur', function() {
+        this.parentElement.querySelector('.input-icon').style.color = '#9ca3af';
+      });
+    });
+
+    // Auto-hide messages after 5 seconds
+    setTimeout(() => {
+      const messages = document.querySelectorAll('.message');
+      messages.forEach(msg => {
+        if (msg.style.display === 'block') {
+          setTimeout(() => {
+            msg.style.display = 'none';
+          }, 5000);
+        }
+      });
+    }, 100);
+  </script>
+</body>
+</html>

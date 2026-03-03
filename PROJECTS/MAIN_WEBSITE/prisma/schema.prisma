@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  username      String   @unique
+  password_hash String
+  created_at    DateTime  @default(now())
+
+  @@map("users")
+}
+
+model Booking {
+  id          Int      @id @default(autoincrement())
+  name        String
+  phone       String
+  package     String
+  date        String
+  details     String?
+  status       String   @default("pending")
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  @@map("bookings")
+}
+
+model Gallery {
+  id          Int      @id @default(autoincrement())
+  image_url   String
+  public_id   String   @unique
+  caption     String?
+  created_at   DateTime  @default(now())
+
+  @@map("gallery")
+}
+
+model SiteAsset {
+  id          Int      @id @default(autoincrement())
+  asset_type  String   @unique
+  image_url   String
+  public_id   String
+  alt_text    String?
+  updated_at   DateTime  @default(now())
+
+  @@map("site_assets")
+}
+
+model HomeImage {
+  id            Int      @id @default(autoincrement())
+  image_url     String
+  public_id     String
+  caption       String?
+  display_order Int      @default(0)
+  is_active     Boolean  @default(true)
+  created_at     DateTime  @default(now())
+
+  @@map("home_images")
+}
