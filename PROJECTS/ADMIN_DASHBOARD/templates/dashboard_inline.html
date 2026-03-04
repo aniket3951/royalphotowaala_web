@@ -999,8 +999,9 @@
             container.innerHTML = '<p class="empty-state">Loading gallery...</p>';
             
             try {
-                const response = await fetch(`${API_BASE}/gallery`);
-                const gallery = await response.json();
+                const response = await fetch(`${API_BASE}/gallery-images`);
+                const result = await response.json();
+                const gallery = result.images || [];
                 
                 if (!gallery.length) {
                     container.innerHTML = '<p class="empty-state">No gallery images uploaded</p>';
@@ -1014,7 +1015,7 @@
                     const div = document.createElement('div');
                     div.className = 'image-item';
                     div.innerHTML = `
-                        <img src="${item.image_url}" alt="${item.caption || 'Gallery Image'}">
+                        <img src="${item.url}" alt="${item.caption || 'Gallery Image'}">
                         <button class="delete-btn" onclick="deleteGalleryImage('${item.public_id || item.id}')">🗑️</button>
                     `;
                     grid.appendChild(div);
@@ -1064,7 +1065,7 @@
             if (!confirm("Delete this gallery image?")) return;
             
             try {
-                const response = await fetch(`${API_BASE}/gallery/${id}`, {
+                const response = await fetch(`${API_BASE}/gallery-images/${id}`, {
                     method: 'DELETE'
                 });
                 
