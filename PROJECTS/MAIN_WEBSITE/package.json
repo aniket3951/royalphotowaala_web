@@ -5,12 +5,11 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "build": "npx prisma generate",
-    "postinstall": "npx prisma generate",
     "dev": "nodemon server.js",
-    "db:push": "npx prisma db push",
-    "db:studio": "npx prisma studio",
-    "db:generate": "npx prisma generate",
+    "build": "prisma generate",
+    "db:push": "prisma db push",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio",
     "db:seed": "node prisma/seed.js"
   },
   "dependencies": {
