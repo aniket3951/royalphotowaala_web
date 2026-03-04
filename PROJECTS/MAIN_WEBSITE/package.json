@@ -5,10 +5,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "build": "npx prisma generate",
+    "postinstall": "npx prisma generate",
     "dev": "nodemon server.js",
-    "db:push": "prisma db push",
-    "db:studio": "prisma studio",
-    "db:generate": "prisma generate",
+    "db:push": "npx prisma db push",
+    "db:studio": "npx prisma studio",
+    "db:generate": "npx prisma generate",
     "db:seed": "node prisma/seed.js"
   },
   "dependencies": {
@@ -23,11 +25,11 @@
     "@prisma/client": "^5.6.0",
     "@prisma/adapter-libsql": "^5.6.0",
     "pg": "^8.11.3",
-    "sqlite3": "^5.1.6"
+    "sqlite3": "^5.1.6",
+    "prisma": "^5.6.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1",
-    "prisma": "^5.6.0"
+    "nodemon": "^3.0.1"
   },
   "engines": {
     "node": ">=18.0.0"
