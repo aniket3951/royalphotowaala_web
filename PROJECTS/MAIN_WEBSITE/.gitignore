@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Database files
+prisma/dev.db
+prisma/dev.db-journal
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Build artifacts
+dist/
+build/
+
+# Cache
+.cache/
+.npm/
+
+# Render specific
+.render/
